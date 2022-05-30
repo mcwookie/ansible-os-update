@@ -1,0 +1,41 @@
+---
+- name: apply patches to os
+  hosts: all
+  become: yes
+
+  vars_files: vars/vault.yml
+  
+  tasks:
+    - name: update package cache if older than 3600 seconds
+      apt:
+        update_cache: yes
+        cache_valid_time: 3600
+
+    - name: update packages
+      apt:
+        name: "*"
+        state: latest
+
+    - name: list installed and updated packages
+      shell: grep -E "^$(date +%Y-%m-%d).+ (install|upgrade) " /var/log/dpkg.log |cut -d " " -f 3-5
+      register: result
+  
+    - name: show output
+      debug: msg="{{ result.stdout_lines }}"
+
+    - name: remove useless packages from the cache
+      apt: 
+        autoclean: yes
+        
+    - name: remove no longer required packages
+      apt: 
+        autoremove: yes
+
+    - name: check if reboot file exists
+      stat:
+        path: /var/run/reboot-required
+      register: reboot_file
+
+    - name: reboot system if required for kernel update
+      reboot: 
+      when: reboot_file.stat.exists == True
