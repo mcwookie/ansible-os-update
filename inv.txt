@@ -1,4 +1,4 @@
-[bvogleaccount]
+[bvaccount]
 dagobah ansible_host=192.168.20.20
 pihole2 ansible_host=192.168.20.26
 pihole1 ansible_host=192.168.20.27
